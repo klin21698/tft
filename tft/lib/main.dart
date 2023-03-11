@@ -1,5 +1,5 @@
 import 'dart:math';
-
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:tft/character.dart';
 import 'package:tft/trait.dart';
@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'TFTdle',
+      title: 'TRAITLE',
       theme: ThemeData(
         useMaterial3: true,
         primarySwatch: Colors.blue,
@@ -36,7 +36,10 @@ class Quiz extends StatefulWidget {
   @override
   State<Quiz> createState() => _QuizState();
 }
-
+//final now = new DateTime.M();
+ //String formatter = DateFormat.M().format(now);
+ //print(formatter);
+  
 class _QuizState extends State<Quiz> {
   // These are all the variables that the quiz needs
   // Controller is used for the search function to get the text from the controller
@@ -48,8 +51,9 @@ class _QuizState extends State<Quiz> {
   // _wrongCharacters is a set of the wrong characters, used for displaying the red outline
   final Set<String> _wrongCharacters = {};
   // _dailyQuiz is a list of the desired traits that the user wants to activate
-  final DailyQuiz _dailyQuiz = dailyQuizzes[
-      0]; // TODO: find a way to sample a random daily quiz based on today's date
+  late DailyQuiz _dailyQuiz; // TODO: find a way to sample a random daily quiz based on today's date
+ 
+  
   // keeping track of the number of attempts
   int _attempts = 5;
   // if showRedOutline true, then we show the red outline
@@ -58,32 +62,61 @@ class _QuizState extends State<Quiz> {
   @override
   void initState() {
     super.initState();
+    _dailyQuiz = determineQuiz();
     document.onContextMenu
         .listen((event) => event.preventDefault()); // Don't worry about this
   }
-
+  
+  DailyQuiz determineQuiz() {
+    DateTime now = DateTime.now();
+    DateTime date = DateTime(now.year, now.month, now.day);
+    int quizNum = (30*date.month)+date.day;
+    //print(quizNum.toString() + " " + (quizNum%dailyQuizzes.length).toString());
+    return dailyQuizzes[quizNum%dailyQuizzes.length];
+  }
+ 
   bool _calculateCorrect() {
     // We call this function on submit. Calculates whether the user got the quiz right
     // Keeps track of the wrong characters so we can add red outlines around them
     setState(() {
       _attempts -= 1;
     });
-    bool correct = true;
+    bool res = false;
     _wrongCharacters.clear();
-    for (int i = 0; i < _selectedCharacters.length; i++) {
-      if (!_dailyQuiz.correctCharacters.contains(_selectedCharacters[i].name)) {
-        _wrongCharacters.add(_selectedCharacters[i].name);
-        correct = false;
+    //_dailyQuiz.correctCorrecters: List<List<String>>, whereas _selectedCharacters: List<String>
+    Map<String, int> wrongCharactersMap = {};
+    // {k1:v1, k2:v2}
+    // }styop
+    for(List<String> correctCharactersList in _dailyQuiz.correctCharacters){
+      bool correct = true;
+      for (int i = 0; i < _selectedCharacters.length; i++) {
+        if (!correctCharactersList.contains(_selectedCharacters[i].name)) {
+          // _wrongCharacters.add(_selectedCharacters[i].name);
+          if(wrongCharactersMap.containsKey(_selectedCharacters[i].name)){
+            wrongCharactersMap[_selectedCharacters[i].name] = wrongCharactersMap[_selectedCharacters[i].name]! + 1;
+          }else{ 
+                wrongCharactersMap[_selectedCharacters[i].name] = 1;
+          }
+          
+          correct = false;
+        }
       }
-    }
-    for (int i = 0; i < _dailyQuiz.correctCharacters.length; i++) {
-      if (!_selectedCharacters
-          .map((e) => e.name)
-          .contains(_dailyQuiz.correctCharacters[i])) {
-        correct = false;
+      for (int i = 0; i < correctCharactersList.length; i++) {
+        if (!_selectedCharacters
+            .map((e) => e.name)
+            .contains(correctCharactersList[i])) {
+          correct = false;
+        }
       }
+      for(String character in wrongCharactersMap.keys){
+        int timesInWrongCharactersMap = wrongCharactersMap[character]!;
+        if (timesInWrongCharactersMap == _dailyQuiz.correctCharacters.length){
+          _wrongCharacters.add(character);
+        }
+      }
+      res = res || correct;
     }
-    return correct;
+    return res;
   }
 
   Widget _characterWidget(String characterName, bool inSelectedList) {
@@ -93,8 +126,8 @@ class _QuizState extends State<Quiz> {
         inSelectedList;
     if (wrong) {
       return SizedBox(
-          width: 100,
-          height: 100,
+          width: 40,
+          height: 40,
           child: Container(
             decoration: BoxDecoration(border: Border.all(color: Colors.red)),
             child: Center(
@@ -103,8 +136,8 @@ class _QuizState extends State<Quiz> {
           ));
     }
     return SizedBox(
-        width: 100,
-        height: 100,
+        width: 30,
+        height: 30,
         child: Center(
             child: Image.asset(
                 'assets/characters/${characterName.replaceAll(" ", "")}.png')));
@@ -216,6 +249,54 @@ class _QuizState extends State<Quiz> {
     // Shows the traits that the user is going for
     List<Widget> res = [];
     for (QuizTrait quizTrait in _dailyQuiz.quizTraits) {
+      // breakpoints=[2,4] and desiredLevel=5
+      int index = -1;
+      for (int i = 0; i < quizTrait.trait.breakpoints.length; i++) {
+        if (quizTrait.trait.breakpoints[i] <= quizTrait.desiredLevel) {
+          index = i;
+        }
+      }
+    
+      Color brown = Colors.brown.shade800;
+      Color gold = Colors.yellow.shade700;
+      Color silver = Colors.grey.shade700;
+      Color backgroundColor = Colors.black87;
+       if (quizTrait.trait.breakpoints.length == 1) {
+          backgroundColor = gold;
+      }
+      if (quizTrait.trait.breakpoints.length == 2) {
+        if (index == 0) {
+          backgroundColor = brown;
+        }
+        if (index == 1) {
+          backgroundColor = gold;
+        }
+      }
+      if (quizTrait.trait.breakpoints.length == 3) {
+        if (index == 0) {
+          backgroundColor = brown;
+        }
+        if (index == 1) {
+          backgroundColor = silver;
+        }
+        if (index == 2) {
+          backgroundColor = gold;
+        }
+      }
+      if (quizTrait.trait.breakpoints.length == 4) {
+        if (index == 0) {
+          backgroundColor = brown;
+        }
+        if (index == 1) {
+          backgroundColor = silver;
+        }
+        if (index == 2) {
+          backgroundColor = gold;
+        }
+        if (index == 3) {
+          backgroundColor = Colors.purple.shade50;
+        }
+      }
       res.add(Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0),
         child: Row(
@@ -224,26 +305,27 @@ class _QuizState extends State<Quiz> {
               padding: const EdgeInsets.only(right: 8.0),
               child: Image.asset(
                   'assets/traits/${quizTrait.trait.name.toLowerCase()}.png',
-                  color: Colors.white),
+                  color: Colors.white, width:18, height: 18),
             ),
             Container(
-                // TODO: Depending on the quizTrait.desiredLevel, assign different colors
-                // bronze, silver, gold, etc
+
                 decoration: BoxDecoration(
-                    color: Colors.grey.shade800,
+                    color: backgroundColor,
+                    // color: backgroundColor,
                     border: Border.all(
-                      color: Colors.grey.shade800,
+                      color: backgroundColor,
+                      // color: backgroundColor,
                     ),
                     borderRadius: const BorderRadius.all(Radius.circular(6))),
                 child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Text(quizTrait.desiredLevel.toString()))),
+                    padding: const EdgeInsets.all(4),
+                    child: Text(quizTrait.desiredLevel.toString(), style:Theme.of(context).textTheme.bodyMedium))),
             Padding(
               padding: const EdgeInsets.only(left: 8.0),
               child: Column(
                 children: [
                   Text(quizTrait.trait.name,
-                      style: Theme.of(context).textTheme.bodyLarge),
+                      style: Theme.of(context).textTheme.bodyMedium),
                 ],
               ),
             ),
@@ -260,7 +342,7 @@ class _QuizState extends State<Quiz> {
     List<Widget> columnWidgets = [];
     for (int i = 0; i < traitWidgets.length; i += 3) {
       columnWidgets.add(Padding(
-        padding: const EdgeInsets.only(top: 20.0),
+        padding: const EdgeInsets.only(top: 10.0),
         child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: traitWidgets.sublist(i, min(i + 3, traitWidgets.length))),
@@ -273,33 +355,33 @@ class _QuizState extends State<Quiz> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("TFTdle"), // The app bar at the top
+        title: const Text("TRAITLE"), // The app bar at the top
       ),
       body: SingleChildScrollView(
         child: Center(
           child: SizedBox(
-            width: 500,
+            width: 700,
             // This is the column of widgets that gets built (and the user sees)
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 // This widget contains all desired traits
                 Padding(
-                    padding: const EdgeInsets.only(top: 20),
+                    padding: const EdgeInsets.only(top: 0),
                     child: _formatTraitWidgets(_traitWidgets())),
                 // This widget contains the selected characters. If there are non selected characters, then it will display a text
                 Padding(
                   padding: const EdgeInsets.only(top: 25),
                   child: SizedBox(
-                      width: 450,
-                      height: 450,
+                      width: 350,
+                      height: 350,
                       child: _selectedCharacters.isEmpty
                           ? Center(
                               child: Text(
                                   "Select the correct champions to activate the traits!",
                                   textAlign: TextAlign.center,
                                   style:
-                                      Theme.of(context).textTheme.displaySmall))
+                                      Theme.of(context).textTheme.bodyLarge))
                           : GridView.count(
                               crossAxisCount: 3,
                               children: _selectedCharacterWidgets(),
@@ -367,20 +449,20 @@ class _QuizState extends State<Quiz> {
                 // This widget contains the text field for search functionality
                 Padding(
                   padding: const EdgeInsets.only(top: 25),
-                  child: TextField(
+                  child: SizedBox(width:400, child:TextField(
                     controller: _textEditingController,
                     decoration:
                         const InputDecoration(hintText: "Search champions"),
                     onChanged: (value) {
                       setState(() {});
                     },
-                  ),
+                  )),
                 ),
                 // This widget contains the characters that the user searched for
                 Padding(
                   padding: const EdgeInsets.only(top: 25),
                   child: SizedBox(
-                      width: 450,
+                      width: 350,
                       height: 900,
                       child: GridView.count(
                           crossAxisCount: 3,
