@@ -258,7 +258,7 @@ class _QuizState extends State<Quiz> {
       }
     
       Color brown = Colors.brown.shade800;
-      Color gold = Colors.yellow.shade700;
+      Color gold = Colors.yellow.shade900;
       Color silver = Colors.grey.shade700;
       Color backgroundColor = Colors.black87;
        if (quizTrait.trait.breakpoints.length == 1) {

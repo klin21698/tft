@@ -220,8 +220,8 @@ List<DailyQuiz> dailyQuizzes = [
   ]  ]),
   DailyQuiz([
     QuizTrait(Trait('Brawler',[2,4,6,8]), 6),
-    QuizTrait(Trait('Heart',[2,4,6]), 5),
-    QuizTrait(Trait('Admin',[2,4,6]), 4),
+    QuizTrait(Trait('Heart',[2,4,6]), 2),
+    QuizTrait(Trait('Admin',[2,4,6]), 2),
     QuizTrait(Trait('Anima Squad',[3,5,7]), 1),
     QuizTrait(Trait('LaserCorps',[3,5,7,9]),1), 
     QuizTrait(Trait('Mecha PRIME',[3,5]), 1),
@@ -346,7 +346,7 @@ List<DailyQuiz> dailyQuizzes = [
   ]  ]),
   DailyQuiz([
     QuizTrait(Trait('Mascot',[2,4,6,8]), 6),
-    QuizTrait(Trait('Supers',[3]), 1),
+    QuizTrait(Trait('Supers',[3]), 3),
     QuizTrait(Trait('Aegis',[2,3,4,5]), 2),
     QuizTrait(Trait('Brawler',[2,4,6,8]), 2),
     QuizTrait(Trait('Heart',[2,4,6]), 2),
